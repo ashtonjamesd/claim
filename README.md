@@ -85,6 +85,31 @@ should(read_from_cache) {
 3 tests, 2 passed, 0 failed (0 pending, 1 skipped)
 ```
 
+## Grouping
+
+`describe` groups tests. Test failures show which group they belong to. It applies to all tests below the `describe` until another is declared.
+
+```c
+describe("parser")
+
+should(parse_int) {
+    int result = parse("42");
+    expect_eq(result, 42);
+}
+
+should(reject_empty) {
+    int result = parse("");
+    expect_eq(result, -1);
+}
+```
+
+Failure output:
+
+```bash
+    assertion failed (test.c:5): expected 'result' to equal '42' (got -1, expected 42)
+  test failed 'parser' > 'parse_int'
+```
+
 ## Setup and Teardown
 
 `before` runs before every test in a group. `after` runs after. You might use them to allocate and free shared state.
@@ -119,31 +144,6 @@ should(reset_between_tests) {
 ```
 
 In this case, each test gets a new allocation. `before` and `after` callbacks  are scoped to the current `describe`. Declaring a new `describe` clears them.
-
-## Grouping
-
-`describe` groups tests. Test failures show which group they belong to. It applies to all tests below the `describe` until another is declared.
-
-```c
-describe("parser")
-
-should(parse_int) {
-    int result = parse("42");
-    expect_eq(result, 42);
-}
-
-should(reject_empty) {
-    int result = parse("");
-    expect_eq(result, -1);
-}
-```
-
-Failure output:
-
-```bash
-    assertion failed (test.c:5): expected 'result' to equal '42' (got -1, expected 42)
-  test failed 'parser' > 'parse_int'
-```
 
 
 ## Output
