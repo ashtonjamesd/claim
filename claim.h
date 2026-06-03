@@ -11,23 +11,23 @@
 #define BOLD_RED "\033[1;31m"
 #define RESET "\033[0m"
 
-bool _eq_int(int a, int b) { return a == b; }
-bool _eq_unsigned_int(unsigned int a, unsigned int b) { return a == b; }
-bool _eq_long(long a, long b) { return a == b; }
-bool _eq_unsigned_long(unsigned long a, unsigned long b) { return a == b; }
-bool _eq_long_long(long long a, long long b) { return a == b; }
-bool _eq_unsigned_long_long(unsigned long long a, unsigned long long b) { return a == b; }
-bool _eq_short(short a, short b) { return a == b; }
-bool _eq_unsigned_short(unsigned short a, unsigned short b) { return a == b; }
-bool _eq_char(char a, char b) { return a == b; }
-bool _eq_unsigned_char(unsigned char a, unsigned char b) { return a == b; }
-bool _eq_float(float a, float b) { return a == b; }
-bool _eq_double(double a, double b) { return a == b; }
-bool _eq_bool(bool a, bool b) { return a == b; }
-bool _eq_str(char *a, char *b) { return strcmp(a, b) == 0; }
-bool _eq_const_str(const char *a, const char *b) { return strcmp(a, b) == 0; }
+static bool claim_eq_int(int a, int b) { return a == b; }
+static bool claim_eq_unsigned_int(unsigned int a, unsigned int b) { return a == b; }
+static bool claim_eq_long(long a, long b) { return a == b; }
+static bool claim_eq_unsigned_long(unsigned long a, unsigned long b) { return a == b; }
+static bool claim_eq_long_long(long long a, long long b) { return a == b; }
+static bool claim_eq_unsigned_long_long(unsigned long long a, unsigned long long b) { return a == b; }
+static bool claim_eq_short(short a, short b) { return a == b; }
+static bool claim_eq_unsigned_short(unsigned short a, unsigned short b) { return a == b; }
+static bool claim_eq_char(char a, char b) { return a == b; }
+static bool claim_eq_unsigned_char(unsigned char a, unsigned char b) { return a == b; }
+static bool claim_eq_float(float a, float b) { return a == b; }
+static bool claim_eq_double(double a, double b) { return a == b; }
+static bool claim_eq_bool(bool a, bool b) { return a == b; }
+static bool claim_eq_str(char *a, char *b) { return strcmp(a, b) == 0; }
+static bool claim_eq_const_str(const char *a, const char *b) { return strcmp(a, b) == 0; }
 
-#define _FMT(x) _Generic((x), \
+#define FORMAT_TEST_VALUE(x) _Generic((x), \
     int: "%d", \
     unsigned int: "%u", \
     long: "%ld", \
@@ -45,42 +45,42 @@ bool _eq_const_str(const char *a, const char *b) { return strcmp(a, b) == 0; }
     const char *: "\"%s\"" \
 )
 
-#define _EQ_FN(x) _Generic((x), \
-    int: _eq_int, \
-    unsigned int: _eq_unsigned_int, \
-    long: _eq_long, \
-    unsigned long: _eq_unsigned_long, \
-    long long: _eq_long_long, \
-    unsigned long long: _eq_unsigned_long_long, \
-    short: _eq_short, \
-    unsigned short: _eq_unsigned_short, \
-    char: _eq_char, \
-    unsigned char: _eq_unsigned_char, \
-    float: _eq_float, \
-    double: _eq_double, \
-    bool: _eq_bool, \
-    char *: _eq_str, \
-    const char *: _eq_const_str \
+#define CLAIM_EQ_FN(x) _Generic((x), \
+    int: claim_eq_int, \
+    unsigned int: claim_eq_unsigned_int, \
+    long: claim_eq_long, \
+    unsigned long: claim_eq_unsigned_long, \
+    long long: claim_eq_long_long, \
+    unsigned long long: claim_eq_unsigned_long_long, \
+    short: claim_eq_short, \
+    unsigned short: claim_eq_unsigned_short, \
+    char: claim_eq_char, \
+    unsigned char: claim_eq_unsigned_char, \
+    float: claim_eq_float, \
+    double: claim_eq_double, \
+    bool: claim_eq_bool, \
+    char *: claim_eq_str, \
+    const char *: claim_eq_const_str \
 )
 
 #define expect_eq(a, b) do { \
     runner.assertions += 1; \
-    if (!_EQ_FN(a)((a), (b))) { \
+    if (!CLAIM_EQ_FN(a)((a), (b))) { \
         runner.assertions_failed += 1; \
         printf(ASSERTION_FAILED " (%s:%d): expected '%s' to equal '%s' (got ", __FILE__, __LINE__, #a, #b); \
-        printf(_FMT(a), (a)); \
+        printf(FORMAT_TEST_VALUE(a), (a)); \
         printf(", expected "); \
-        printf(_FMT(b), (b)); \
+        printf(FORMAT_TEST_VALUE(b), (b)); \
         printf(")\n"); \
     } \
 } while (0)
 
 #define expect_not_eq(a, b) do { \
     runner.assertions += 1; \
-    if (_EQ_FN(a)((a), (b))) { \
+    if (CLAIM_EQ_FN(a)((a), (b))) { \
         runner.assertions_failed += 1; \
         printf(ASSERTION_FAILED " (%s:%d): expected '%s' to not equal '%s' (both are ", __FILE__, __LINE__, #a, #b); \
-        printf(_FMT(a), (a)); \
+        printf(FORMAT_TEST_VALUE(a), (a)); \
         printf(")\n"); \
     } \
 } while (0)
