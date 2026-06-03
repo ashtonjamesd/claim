@@ -28,6 +28,17 @@ int main() {
 
 Tests register themselves. Just write them and they run.
 
+## Should
+
+All test functions are declared with `should`.
+
+```c
+should(test_the_truth) {
+    expect(true);
+}
+```
+
+
 ## Assertions
 
 ```c
@@ -76,7 +87,7 @@ should(read_from_cache) {
 
 ## Grouping
 
-`describe` groups tests. Test failures show which group they belong to.
+`describe` groups tests. Test failures show which group they belong to. It applies to all tests below the `describe` until another is declared.
 
 ```c
 describe("parser")
