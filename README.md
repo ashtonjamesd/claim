@@ -33,9 +33,10 @@ Tests register themselves. Just write them and they run.
 ```c
 expect(x == 1)               // asserts any expression
 refute(x == 0)               // fails if expression is true
+expect_eq(a, b)              // type-generic equality (int, float, char *, etc.)
+expect_not_eq(a, b)          // type-generic inequality
 expect_null(ptr)             // ptr == NULL
 expect_not_null(ptr)         // ptr != NULL
-expect_eq(a, b)              // performs generic comparison on any primitive type
 ```
 
 ## Pending
@@ -117,3 +118,8 @@ with failures:
 ```
 
 `test_results` returns `1` on failure and `0` on success.
+
+
+```bash
+4 tests, 4 passed, 0 failed (0 pending, 0 skipped)
+```
