@@ -85,6 +85,41 @@ should(read_from_cache) {
 3 tests, 2 passed, 0 failed (0 pending, 1 skipped)
 ```
 
+## Setup and Teardown
+
+`before` runs before every test in a group. `after` runs after. You might use them to allocate and free shared state.
+
+```c
+static int *counter;
+
+describe("counter")
+
+before(setup) {
+    counter = malloc(sizeof(int));
+    *counter = 0;
+}
+
+after(cleanup) {
+    free(counter);
+    counter = NULL;
+}
+
+should(start_at_zero) {
+    expect_eq(*counter, 0);
+}
+
+should(increment) {
+    *counter = 42;
+    expect_eq(*counter, 42);
+}
+
+should(reset_between_tests) {
+    expect_eq(*counter, 0);
+}
+```
+
+In this case, each test gets a new allocation. `before` and `after` callbacks  are scoped to the current `describe`. Declaring a new `describe` clears them.
+
 ## Grouping
 
 `describe` groups tests. Test failures show which group they belong to. It applies to all tests below the `describe` until another is declared.
@@ -130,7 +165,16 @@ with failures:
 
 `test_results` returns `1` on failure and `0` on success.
 
+## Building
+
+Run the tests with:
 
 ```bash
-4 tests, 4 passed, 0 failed (0 pending, 0 skipped)
+make test
+```
+
+Build project with:
+
+```bash
+make
 ```

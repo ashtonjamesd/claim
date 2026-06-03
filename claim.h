@@ -85,16 +85,21 @@ static bool claim_eq_const_str(const char *a, const char *b) { return strcmp(a, 
     } \
 } while (0)
 
-static const char *current_describe = NULL;
-static const char *_register_group = NULL;
-
 typedef void (*TestFunc)(void);
+
+static const char *current_describe = NULL;
+
+static const char *registered_group = NULL;
+static TestFunc registered_setup = NULL;
+static TestFunc registered_teardown = NULL;
 
 typedef struct {
     const char *test_name;
     const char *group;
 
     TestFunc fn;
+    TestFunc setup;
+    TestFunc teardown;
 } registered_test;
 
 #define _CONCAT2(a, b) a##b
@@ -132,16 +137,34 @@ static struct {
     void name(void); \
     __attribute__((constructor)) void register_##name(void) { \
         runner.registry[runner.registry_count].test_name = #name; \
-        runner.registry[runner.registry_count].group = _register_group; \
+        runner.registry[runner.registry_count].group = registered_group; \
         runner.registry[runner.registry_count].fn = name; \
+        runner.registry[runner.registry_count].setup = registered_setup; \
+        runner.registry[runner.registry_count].teardown = registered_teardown; \
         runner.registry_count++; \
     } \
     void name(void)
 
 #define describe(name) \
     __attribute__((constructor)) void _UNIQUE(_set_group_)(void) { \
-        _register_group = name; \
+        registered_group = name; \
+        registered_setup = NULL; \
+        registered_teardown = NULL; \
     }
+
+#define before(name) \
+    void name(); \
+    __attribute__((constructor)) void _UNIQUE(_setup)(void) { \
+        registered_setup = name; \
+    } \
+    void name()
+
+#define after(name) \
+    void name(); \
+    __attribute__((constructor)) void _UNIQUE(_setup)(void) { \
+        registered_teardown = name; \
+    } \
+    void name()
 
 #define ASSERTION_FAILED "    " BOLD_RED "assertion failed" RESET
 
@@ -186,7 +209,11 @@ static void run_all_tests() {
         size_t prev_skipped = runner.tests_skipped;
 
         current_describe = runner.registry[i].group;
+        
+        if (runner.registry[i].setup) runner.registry[i].setup();
         runner.registry[i].fn();
+        if (runner.registry[i].teardown) runner.registry[i].teardown();
+
         runner.tests_ran += 1;
 
         if (prev_pending != runner.tests_pending) {

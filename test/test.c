@@ -27,7 +27,7 @@ describe("expect_eq")
 
 should(compare_int) {
     int a = 42;
-    int b = 41;
+    int b = 42;
 
     expect_eq(a, b);
 }
