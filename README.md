@@ -165,6 +165,19 @@ with failures:
 
 `test_results` returns `1` on failure and `0` on success.
 
+## Crash Recovery
+
+Each test runs in a forked process. If a test segfaults, aborts, or crashes, the runner catches it and keeps going.
+
+```bash
+    crashed (SIGSEGV (segmentation fault))
+  test crashed 'parser' > 'parse_null'
+
+3 tests, 2 passed, 1 failed (0 pending, 0 skipped)
+```
+
+Handles `SIGSEGV`, `SIGABRT`, `SIGFPE`, and `SIGBUS`.
+
 ## Building
 
 Run the tests with:

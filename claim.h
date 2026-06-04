@@ -6,6 +6,10 @@
 #include <stdbool.h>
 #include <string.h>
 
+#include <sys/wait.h>
+#include <unistd.h>
+#include <signal.h>
+
 #define RED "\033[0;31m"
 #define GREEN "\033[0;32m"
 #define YELLOW "\033[0;33m"
@@ -31,14 +35,14 @@ static bool claim_eq_str(char *a, char *b) {
     if (!a || !b) return false;
 
     return strcmp(a, b) == 0;
- }
+}
 
 static bool claim_eq_const_str(const char *a, const char *b) { 
     if (!a && !b) return true;
     if (!a || !b) return false;
 
     return strcmp(a, b) == 0;
- }
+}
 
 #define FORMAT_TEST_VALUE(x) _Generic((x), \
     int: "%d", \
@@ -219,36 +223,69 @@ static struct {
     } \
 } while (0)
 
+static void claim_print_result(const char *label, const char *group, const char *name, const char *color) {
+    if (group) {
+        printf("%s  %s " RESET "'%s'%s > " RESET "'%s'\n\n", color, label, group, color, name);
+    } else {
+        printf("%s  %s " RESET "'%s'\n\n", color, label, name);
+    }
+}
+
 static void run_all_tests() {
     for (size_t i = 0; i < runner.registry_count; i++) {
-        size_t prev_assertions_failed = runner.assertions_failed;
-        size_t prev_pending = runner.tests_pending;
-        size_t prev_skipped = runner.tests_skipped;
-
         current_describe = runner.registry[i].group;
-        
-        if (runner.registry[i].setup) runner.registry[i].setup();
-        runner.registry[i].fn();
-        if (runner.registry[i].teardown) runner.registry[i].teardown();
-
         runner.tests_ran += 1;
+        
+        fflush(stdout);
+        pid_t pid = fork();
 
-        if (prev_pending != runner.tests_pending) {
-            if (current_describe)
-                printf("" YELLOW "  test pending " RESET "'%s'" YELLOW " > " RESET "'%s'\n\n", current_describe, runner.registry[i].test_name);
-            else
-                printf("" YELLOW "  test pending " RESET "'%s'\n", runner.registry[i].test_name);
-        } else if (prev_skipped != runner.tests_skipped) {
-            if (current_describe)
-                printf("" YELLOW "  test skipped " RESET "'%s'" YELLOW " > " RESET "'%s'\n\n", current_describe, runner.registry[i].test_name);
-            else
-                printf("" YELLOW "  test skipped " RESET "'%s'\n\n", runner.registry[i].test_name);
-        } else if (prev_assertions_failed != runner.assertions_failed) {
+        if (pid == 0) {
+            if (runner.registry[i].setup) runner.registry[i].setup();
+            runner.registry[i].fn();
+            if (runner.registry[i].teardown) runner.registry[i].teardown();
+            
+            if (runner.tests_pending > 0) _exit(2);
+            if (runner.tests_skipped > 0) _exit(3);
+            if (runner.assertions_failed > 0) _exit(1);
+
+            _exit(0);
+        }
+        
+        int status;
+        waitpid(pid, &status, 0);
+
+        const char *group = current_describe;
+        const char *name = runner.registry[i].test_name;
+
+        if (WIFSIGNALED(status)) {
+            int sig = WTERMSIG(status);
+            const char *sig_name = "unknown signal";
+            if (sig == SIGSEGV) {
+                sig_name = "SIGSEGV (segmentation fault)";
+            } else if (sig == SIGABRT) {
+                sig_name = "SIGABRT (abort)";
+            } else if (sig == SIGFPE) {
+                sig_name = "SIGFPE (floating point exception)";
+            } else if (sig == SIGBUS) {
+                sig_name = "SIGBUS (bus error)";
+            }
+
             runner.tests_failed += 1;
-            if (current_describe)
-                printf(RED "  test failed " RESET "'%s'" RED " > " RESET "'%s'\n\n", current_describe, runner.registry[i].test_name);
-            else
-                printf(RED "  test failed " RESET "'%s'\n\n", runner.registry[i].test_name);
+            printf("    " BOLD_RED "crashed" RESET " (%s)\n", sig_name);
+            claim_print_result("test crashed", group, name, BOLD_RED);
+        } else if (WIFEXITED(status)) {
+            int code = WEXITSTATUS(status);
+
+            if (code == 1) {
+                runner.tests_failed += 1;
+                claim_print_result("test failed", group, name, RED);
+            } else if (code == 2) {
+                runner.tests_pending += 1;
+                claim_print_result("test pending", group, name, YELLOW);
+            } else if (code == 3) {
+                runner.tests_skipped += 1;
+                claim_print_result("test skipped", group, name, YELLOW);
+            }
         }
     }
     current_describe = NULL;
