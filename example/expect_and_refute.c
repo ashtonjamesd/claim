@@ -2,11 +2,11 @@
 
 describe("expect and refute")
 
-should(test_the_truth) {
+should (test_the_truth) {
     expect(true);
 }
 
-should(test_another_truth) {
+should (test_another_truth) {
     refute(false);
 }
 

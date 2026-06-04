@@ -20,12 +20,12 @@ Copy `claim.h` into your project and include it.
 
 describe("math")
 
-should(add) {
+should (add) {
     expect(1 + 1 == 2);
     expect(0 + 0 == 0);
 }
 
-should(subtract) {
+should (subtract) {
     expect(5 - 3 == 2);
     refute(10 - 1 == 0);
 }
@@ -42,11 +42,11 @@ Tests register themselves. Just write them and they run.
 All test functions are declared with `should` or `it`. They're interchangeable so use whichever you prefer.
 
 ```c
-should(add_two_numbers) {
+should (add_two_numbers) {
     expect_eq(1 + 1, 2);
 }
 
-it(subtracts_two_numbers) {
+it (subtracts_two_numbers) {
     expect_eq(5 - 3, 2);
 }
 ```
@@ -68,7 +68,7 @@ expect_not_null(ptr)         // ptr != NULL
 Mark tests as 'work-in-progress' or 'todo' with `pending()`. They won't run and are tracked separately.
 
 ```c
-should(not_ready_yet) {
+should (not_ready_yet) {
     pending();
     // nothing below here runs
 }
@@ -85,7 +85,7 @@ Skip a test at runtime with `skip()`. Use it when the test is valid but can't ru
 ```c
 describe("storage")
 
-should(read_from_cache) {
+should (read_from_cache) {
     skip("currently blocked by ticket #12 — cache returns stale entries");
     expect_eq(cache_get("key"), "xxx");
 }
@@ -103,15 +103,15 @@ should(read_from_cache) {
 Focus on specific tests with `only`. All other tests are skipped.
 
 ```c
-should(not_this) {
+should (not_this) {
     expect(true);
 }
 
-only(just_this) {
+only (just_this) {
     expect_eq(1 + 1, 2);
 }
 
-should(not_this_either) {
+should (not_this_either) {
     expect(true);
 }
 ```
@@ -129,12 +129,12 @@ You can have multiple tests declared with `only`.
 ```c
 describe("parser")
 
-should(parse_int) {
+should (parse_int) {
     int result = parse("42");
     expect_eq(result, 42);
 }
 
-should(reject_empty) {
+should (reject_empty) {
     int result = parse("");
     expect_eq(result, -1);
 }
@@ -156,26 +156,26 @@ static int *counter;
 
 describe("counter")
 
-before(setup) {
+before (setup) {
     counter = malloc(sizeof(int));
     *counter = 0;
 }
 
-after(cleanup) {
+after (cleanup) {
     free(counter);
     counter = NULL;
 }
 
-should(start_at_zero) {
+should (start_at_zero) {
     expect_eq(*counter, 0);
 }
 
-should(increment) {
+should (increment) {
     *counter = 42;
     expect_eq(*counter, 42);
 }
 
-should(reset_between_tests) {
+should (reset_between_tests) {
     expect_eq(*counter, 0);
 }
 ```

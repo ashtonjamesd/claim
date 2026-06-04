@@ -2,11 +2,11 @@
 
 describe("math")
 
-should(add) {
+should (add) {
     expect(2 + 2 == 4);
 }
 
-should(subtract) {
+should (subtract) {
     expect(10 - 5 == 5);
 }
 
