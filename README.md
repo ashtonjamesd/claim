@@ -154,7 +154,7 @@ should ("read from cache") {
 
 ## Only
 
-Focus on specific tests with `only`. All other tests are skipped.
+Run specific tests with `only`. All other tests are skipped.
 
 ```c
 should ("not do this") {
