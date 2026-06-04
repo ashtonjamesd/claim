@@ -257,11 +257,6 @@ test_results(CLAIM_SUMMARY)  // summary line only
 test_results(CLAIM_SILENT)   // no output, just the exit code
 ```
 
-## Things you may not like
-
-- uses a lot of macro hacks
-- not very c-like syntax
-
 ## Building
 
 Run the tests with:
