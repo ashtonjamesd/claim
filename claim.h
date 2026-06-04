@@ -11,6 +11,11 @@
 #include <unistd.h>
 #include <signal.h>
 
+#define CLAIM_VERBOSE 0
+#define CLAIM_QUIET 1
+#define CLAIM_SUMMARY 2
+#define CLAIM_SILENT 3
+
 #define RED "\033[0;31m"
 #define GREEN "\033[0;32m"
 #define YELLOW "\033[0;33m"
@@ -31,14 +36,14 @@ static bool claim_eq_float(float a, float b) { return a == b; }
 static bool claim_eq_double(double a, double b) { return a == b; }
 static bool claim_eq_bool(bool a, bool b) { return a == b; }
 
-static bool claim_eq_str(char *a, char *b) { 
+static bool claim_eq_str(char *a, char *b) {
     if (!a && !b) return true;
     if (!a || !b) return false;
 
     return strcmp(a, b) == 0;
 }
 
-static bool claim_eq_const_str(const char *a, const char *b) { 
+static bool claim_eq_const_str(const char *a, const char *b) {
     if (!a && !b) return true;
     if (!a || !b) return false;
 
@@ -85,11 +90,11 @@ static bool claim_eq_const_str(const char *a, const char *b) {
     runner.assertions += 1; \
     if (!CLAIM_EQ_FN(a)((a), (b))) { \
         runner.assertions_failed += 1; \
-        printf(ASSERTION_FAILED " (%s:%d): expected '%s' to equal '%s' (got ", __FILE__, __LINE__, #a, #b); \
+        printf(ASSERTION_FAILED " (%s:%d): expected '%s' to equal '%s' (got " RED, __FILE__, __LINE__, #a, #b); \
         printf(FORMAT_TEST_VALUE(a), (a)); \
-        printf(", expected "); \
+        printf(RESET ", expected " GREEN); \
         printf(FORMAT_TEST_VALUE(b), (b)); \
-        printf(")\n"); \
+        printf(RESET ")\n"); \
     } \
 } while (0)
 
@@ -97,9 +102,9 @@ static bool claim_eq_const_str(const char *a, const char *b) {
     runner.assertions += 1; \
     if (CLAIM_EQ_FN(a)((a), (b))) { \
         runner.assertions_failed += 1; \
-        printf(ASSERTION_FAILED " (%s:%d): expected '%s' to not equal '%s' (both are ", __FILE__, __LINE__, #a, #b); \
+        printf(ASSERTION_FAILED " (%s:%d): expected '%s' to not equal '%s' (both are " RED, __FILE__, __LINE__, #a, #b); \
         printf(FORMAT_TEST_VALUE(a), (a)); \
-        printf(")\n"); \
+        printf(RESET ")\n"); \
     } \
 } while (0)
 
@@ -122,9 +127,9 @@ typedef struct {
     bool only;
 } registered_test;
 
-#define _CONCAT2(a, b) a##b
-#define _CONCAT(a, b) _CONCAT2(a, b)
-#define _UNIQUE(prefix) _CONCAT(prefix, __COUNTER__)
+#define CONCAT2_(a, b) a##b
+#define CONCAT_(a, b) CONCAT2_(a, b)
+#define UNIQUE_(prefix) CONCAT_(prefix, __COUNTER__)
 
 #define MAX_TESTS 1024
 
@@ -144,6 +149,8 @@ static struct {
     size_t registry_count;
 
     bool has_only;
+
+    int quiet;
 } runner;
 
 #define pending() do { \
@@ -158,29 +165,29 @@ static struct {
 } while (0)
 
 #define _CLAIM_REGISTER(name, id, is_only) \
-    void _CONCAT(claim_test_, id)(void); \
-    __attribute__((constructor)) void _CONCAT(claim_register_, id)(void) { \
+    void CONCAT_(claim_test_, id)(void); \
+    __attribute__((constructor)) void CONCAT_(claim_register_, id)(void) { \
         if (runner.registry_count >= MAX_TESTS) { \
             fprintf(stderr, BOLD_RED "error" RESET ": MAX_TESTS (%d) exceeded\n", MAX_TESTS); \
             exit(1); \
         } \
         runner.registry[runner.registry_count].test_name = name; \
         runner.registry[runner.registry_count].group = registered_group; \
-        runner.registry[runner.registry_count].fn = _CONCAT(claim_test_, id); \
+        runner.registry[runner.registry_count].fn = CONCAT_(claim_test_, id); \
         runner.registry[runner.registry_count].setup = registered_setup; \
         runner.registry[runner.registry_count].teardown = registered_teardown; \
         runner.registry[runner.registry_count].only = is_only; \
         if (is_only) { runner.has_only = true; } \
         runner.registry_count += 1; \
     } \
-    void _CONCAT(claim_test_, id)(void)
+    void CONCAT_(claim_test_, id)(void)
 
 #define should(name) _CLAIM_REGISTER(name, __COUNTER__, false)
 #define it(name) _CLAIM_REGISTER(name, __COUNTER__, false)
 #define only(name) _CLAIM_REGISTER(name, __COUNTER__, true)
 
 #define describe(name) \
-    __attribute__((constructor)) void _UNIQUE(_set_group_)(void) { \
+    __attribute__((constructor)) void UNIQUE_(_set_group_)(void) { \
         registered_group = name; \
         registered_setup = NULL; \
         registered_teardown = NULL; \
@@ -188,19 +195,19 @@ static struct {
 
 #define before(name) \
     void name(); \
-    __attribute__((constructor)) void _UNIQUE(_setup)(void) { \
+    __attribute__((constructor)) void UNIQUE_(_setup)(void) { \
         registered_setup = name; \
     } \
     void name()
 
 #define after(name) \
     void name(); \
-    __attribute__((constructor)) void _UNIQUE(_setup)(void) { \
+    __attribute__((constructor)) void UNIQUE_(_setup)(void) { \
         registered_teardown = name; \
     } \
     void name()
 
-#define ASSERTION_FAILED "    " BOLD_RED "assertion failed" RESET
+#define ASSERTION_FAILED BOLD_RED "assertion failed" RESET
 
 #define refute(expr) do { \
     runner.assertions += 1; \
@@ -238,12 +245,18 @@ static struct {
     } \
 } while (0)
 
-static void claim_print_result(const char *label, const char *group, const char *name, const char *color, double ms) {
-    if (group) {
-        printf("%s  %s " RESET "'%s'%s > " RESET "'%s' (%.1fms)\n\n", color, label, group, color, name, ms);
-    } else {
-        printf("%s  %s " RESET "'%s' (%.1fms)\n\n", color, label, name, ms);
+static const char *claim_last_group = NULL;
+
+static void claim_print_group(const char *group) {
+    if (group && (claim_last_group == NULL || strcmp(claim_last_group, group) != 0)) {
+        printf("\n  %s\n", group);
+        claim_last_group = group;
     }
+}
+
+static void claim_print_result(const char *icon, const char *group, const char *name, const char *color, double ms) {
+    claim_print_group(group);
+    printf("    %s%s" RESET " %s (%.1fms)\n", color, icon, name, ms);
 }
 
 static double claim_elapsed_ms(struct timespec start, struct timespec end) {
@@ -267,22 +280,45 @@ static void run_all_tests() {
 
         fflush(stdout);
 
+        int outpipe[2];
+        pipe(outpipe);
+
         struct timespec test_start, test_end;
         clock_gettime(CLOCK_MONOTONIC, &test_start);
         pid_t pid = fork();
 
         if (pid == 0) {
+            close(outpipe[0]);
+            dup2(outpipe[1], STDOUT_FILENO);
+            close(outpipe[1]);
+
             if (runner.registry[i].setup) runner.registry[i].setup();
             runner.registry[i].fn();
             if (runner.registry[i].teardown) runner.registry[i].teardown();
-            
+
+            fflush(stdout);
+
             if (runner.tests_pending > 0) _exit(2);
             if (runner.tests_skipped > 0) _exit(3);
             if (runner.assertions_failed > 0) _exit(1);
 
             _exit(0);
         }
-        
+
+        close(outpipe[1]);
+
+        char *captured = NULL;
+        size_t captured_len = 0;
+        char buf[4096];
+        ssize_t n;
+        while ((n = read(outpipe[0], buf, sizeof(buf))) > 0) {
+            captured = realloc(captured, captured_len + n + 1);
+            memcpy(captured + captured_len, buf, n);
+            captured_len += n;
+            captured[captured_len] = '\0';
+        }
+        close(outpipe[0]);
+
         int status;
         waitpid(pid, &status, 0);
         clock_gettime(CLOCK_MONOTONIC, &test_end);
@@ -305,22 +341,43 @@ static void run_all_tests() {
             }
 
             runner.tests_failed += 1;
-            printf("    " BOLD_RED "crashed" RESET " (%s)\n", sig_name);
-            claim_print_result("test crashed", group, name, BOLD_RED, test_ms);
+            if (runner.quiet < 2) {
+                claim_print_result("x", group, name, BOLD_RED, test_ms);
+                printf("        " BOLD_RED "crashed" RESET " (%s)\n", sig_name);
+            }
         } else if (WIFEXITED(status)) {
             int code = WEXITSTATUS(status);
 
-            if (code == 1) {
+            if (code == 0) {
+                if (runner.quiet < 1) {
+                    claim_print_result("~", group, name, GREEN, test_ms);
+                }
+            } else if (code == 1) {
                 runner.tests_failed += 1;
-                claim_print_result("test failed", group, name, RED, test_ms);
+                if (runner.quiet < 2) {
+                    claim_print_result("x", group, name, RED, test_ms);
+                }
             } else if (code == 2) {
                 runner.tests_pending += 1;
-                claim_print_result("test pending", group, name, YELLOW, test_ms);
+                if (runner.quiet < 1) {
+                    claim_print_result("-", group, name, YELLOW, test_ms);
+                }
             } else if (code == 3) {
                 runner.tests_skipped += 1;
-                claim_print_result("test skipped", group, name, YELLOW, test_ms);
+                if (runner.quiet < 1) {
+                    claim_print_result("-", group, name, YELLOW, test_ms);
+                }
             }
         }
+
+        if (captured && runner.quiet < 2) {
+            for (char *line = captured, *nl; line && *line; line = nl) {
+                nl = strchr(line, '\n');
+                if (nl) *nl++ = '\0';
+                printf("        %s\n", line);
+            }
+        }
+        free(captured);
     }
     current_describe = NULL;
 
@@ -328,18 +385,21 @@ static void run_all_tests() {
     runner.suite_ms = claim_elapsed_ms(suite_start, suite_end);
 }
 
-static int test_results() {
+static int test_results(int quiet) {
+    runner.quiet = quiet;
     run_all_tests();
 
     size_t tests_passed = runner.tests_ran - runner.tests_failed - runner.tests_pending - runner.tests_skipped;
     size_t tests_ran = runner.tests_ran - runner.tests_pending - runner.tests_skipped;
 
-    const char *color = (runner.tests_failed > 0) ? RED : GREEN;
+    if (runner.quiet < 3) {
+        const char *color = (runner.tests_failed > 0) ? RED : GREEN;
 
-    printf(
-        "\n%s%zu tests, %zu passed, %zu failed (%zu pending, %zu skipped) in %.1fms" RESET "\n",
-        color, tests_ran, tests_passed, runner.tests_failed, runner.tests_pending, runner.tests_skipped, runner.suite_ms
-    );
+        printf(
+            "\n%s%zu tests, %zu passed, %zu failed (%zu pending, %zu skipped) in %.1fms" RESET "\n",
+            color, tests_ran, tests_passed, runner.tests_failed, runner.tests_pending, runner.tests_skipped, runner.suite_ms
+        );
+    }
 
     return (runner.tests_failed > 0)? 1 : 0;
 }

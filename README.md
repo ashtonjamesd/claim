@@ -2,13 +2,15 @@
 
 Single-header unit testing for c
 
-- `expect` and `refute` for boolean assertions
+- `expect` and `refute` / `expect_not` for boolean assertions
+- automatic test runner, no need to run tests individually
 - type-generic assertions with expected/actual values printed on failure
-- test grouping with `describe` and `should`
+- test grouping with `describe` and `should` / `it`
 - setup and teardown hooks with `before` and `after`
 - `skip`, `pending`, and `only` for test control flow
 - crash recovery, segfaults and aborts don't kill the runner
-- tracks time taken to complete run tests
+- configurable test output verbosity levels
+- tracks time taken to run tests
 - no dependencies, just copy the header file
 - simple and intuitive user api
 
@@ -38,8 +40,16 @@ should ("subtract") {
 }
 
 int main() {
-    return test_results();
+    return test_results(CLAIM_VERBOSE);
 }
+```
+
+outputs:
+
+```bash
+  math
+    ~ add (0.3ms)
+    ~ subtract (0.3ms)
 ```
 
 Tests register themselves. Just write them and they run.
@@ -70,6 +80,32 @@ expect_null(ptr)             // ptr == NULL
 expect_not_null(ptr)         // ptr != NULL
 ```
 
+## Grouping
+
+`describe` groups tests. Test failures show which group they belong to. It applies to all tests below the `describe` until another is declared.
+
+```c
+describe("parser")
+
+should ("parse int") {
+    int result = parse("42");
+    expect_eq(result, 42);
+}
+
+should ("reject empty") {
+    int result = parse("");
+    expect_eq(result, -1);
+}
+```
+
+Failure output:
+
+```bash
+  parser
+    x parse int (0.4ms)
+        assertion failed (test.c:5): expected 'result' to equal '42' (got -1, expected 42)
+```
+
 ## Pending
 
 Mark tests as 'work-in-progress' or 'todo' with `pending()`. They won't run and are tracked separately.
@@ -82,7 +118,10 @@ should ("not ready yet") {
 ```
 
 ```bash
-2 tests, 2 passed, 0 failed (1 pending)
+  pending tests
+    - not ready yet (0.1ms)
+
+2 tests, 2 passed, 0 failed (1 pending, 0 skipped) in 0.8ms
 ```
 
 ## Skip
@@ -99,10 +138,11 @@ should ("read from cache") {
 ```
 
 ```bash
-  test skipped 'storage' > 'read from cache'
-    'blocked by ticket #12 — cache returns stale entries'
+  storage
+    - read from cache (0.2ms)
+        'currently blocked by ticket #12 — cache returns stale entries'
 
-3 tests, 2 passed, 0 failed (0 pending, 1 skipped)
+3 tests, 2 passed, 0 failed (0 pending, 1 skipped) in 1.2ms
 ```
 
 ## Only
@@ -126,32 +166,7 @@ should ("not do this either") {
 You can have multiple tests declared with `only`.
 
 ```bash
-1 test, 1 passed, 0 failed (0 pending, 2 skipped) in 0.5ms
-```
-
-## Grouping
-
-`describe` groups tests. Test failures show which group they belong to. It applies to all tests below the `describe` until another is declared.
-
-```c
-describe("parser")
-
-should ("parse int") {
-    int result = parse("42");
-    expect_eq(result, 42);
-}
-
-should ("reject empty") {
-    int result = parse("");
-    expect_eq(result, -1);
-}
-```
-
-Failure output:
-
-```bash
-    assertion failed (test.c:5): expected 'result' to equal '42' (got -1, expected 42)
-  test failed 'parser' > 'parse int'
+1 tests, 1 passed, 0 failed (0 pending, 2 skipped) in 0.5ms
 ```
 
 ## Setup and Teardown
@@ -195,16 +210,22 @@ In this case, each test gets a new allocation. `before` and `after` callbacks  a
 all passing:
 
 ```bash
-2 tests, 2 passed, 0 failed (0 pending, 0 skipped) in 1.2ms
+  math
+    ~ add (0.3ms)
+    ~ subtract (0.2ms)
+
+2 tests, 2 passed, 0 failed (0 pending, 0 skipped) in 0.8ms
 ```
 
 with failures:
 
 ```bash
-    assertion failed (test.c:12): expected 'a' to equal 'b' (got 3, expected 5)
-  test failed 'math' > 'add' (0.4ms)
+  math
+    ~ subtract (0.2ms)
+    x add (0.4ms)
+        assertion failed (test.c:6): expected 'a' to equal 'b' (got 3, expected 5)
 
-3 tests, 2 passed, 1 failed (0 pending, 0 skipped) in 2.1ms
+2 tests, 1 passed, 1 failed (0 pending, 0 skipped) in 1.0ms
 ```
 
 `test_results` returns `1` on failure and `0` on success.
@@ -214,13 +235,30 @@ with failures:
 Each test runs in a forked process. If a test segfaults, aborts, or crashes, the runner catches it and keeps going.
 
 ```bash
-    crashed (SIGSEGV (segmentation fault))
-  test crashed 'parser' > 'parse null' (0.3ms)
+  parser
+    x parse null (0.3ms)
+        crashed (SIGSEGV (segmentation fault))
 
 3 tests, 2 passed, 1 failed (0 pending, 0 skipped) in 1.8ms
 ```
 
 Handles `SIGSEGV`, `SIGABRT`, `SIGFPE`, and `SIGBUS`.
+
+## Verbosity
+
+Control how much output `test_results` produces by passing a verbosity level.
+
+```c
+test_results(CLAIM_VERBOSE)  // full output (default)
+test_results(CLAIM_QUIET)    // failures and crashes only
+test_results(CLAIM_SUMMARY)  // summary line only
+test_results(CLAIM_SILENT)   // no output, just the exit code
+```
+
+## Things you may not like
+
+- uses a lot of macro hacks
+- not very c-like syntax
 
 ## Building
 

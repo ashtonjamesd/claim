@@ -22,5 +22,5 @@ should ("still starts at zero") {
 }
 
 int main() {
-    return test_results();
+    return test_results(CLAIM_QUIET);
 }

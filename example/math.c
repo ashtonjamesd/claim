@@ -11,5 +11,5 @@ should ("subtract") {
 }
 
 int main() {
-    return test_results();
+    return test_results(CLAIM_QUIET);
 }

@@ -44,5 +44,5 @@ should ("not leak between tests") {
 }
 
 int main() {
-    return test_results();
+    return test_results(CLAIM_QUIET);
 }
