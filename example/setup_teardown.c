@@ -25,12 +25,12 @@ after (free_vec) {
     vec = NULL;
 }
 
-should (start_empty) {
+should ("start empty") {
     expect_eq((int)vec->len, 0);
     expect_not_null(vec->items);
 }
 
-should (push_items) {
+should ("push items") {
     vec->items[vec->len++] = 10;
     vec->items[vec->len++] = 20;
 
@@ -39,7 +39,7 @@ should (push_items) {
     expect_eq(vec->items[1], 20);
 }
 
-should (not_leak_between_tests) {
+should ("not leak between tests") {
     expect_eq((int)vec->len, 0);
 }
 

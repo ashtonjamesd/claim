@@ -2,7 +2,7 @@
 
 describe("expect and refute")
 
-it (should_expect_and_refute_correctly) {
+it ("should expect and refute correctly") {
     expect(true);
     refute(false);
 
@@ -10,14 +10,14 @@ it (should_expect_and_refute_correctly) {
     expect_not(false);
 }
 
-it (should_handle_negation) {
+it ("should handle negation") {
     expect(!(1 == 2));
 }
 
 
 describe("null")
 
-should (detect_null) {
+should ("detect null") {
     char *p = NULL;
     expect_null(p);
 
@@ -28,105 +28,105 @@ should (detect_null) {
 
 describe("expect_eq")
 
-should (compare_int) {
+should ("compare nt") {
     int a = 42;
     int b = 42;
 
     expect_eq(a, b);
 }
 
-should (compare_unsigned_int) {
+should ("compare unsigned int") {
     unsigned int a = 100u;
     unsigned int b = 100u;
 
     expect_eq(a, b);
 }
 
-should (compare_long) {
+should ("compare long") {
     long a = 100000L;
     long b = 100000L;
 
     expect_eq(a, b);
 }
 
-should (compare_unsigned_long) {
+should ("compare unsigned long") {
     unsigned long a = 100000UL;
     unsigned long b = 100000UL;
 
     expect_eq(a, b);
 }
 
-should (compare_long_long) {
+should ("compare long long") {
     long long a = 9000000000LL;
     long long b = 9000000000LL;
 
     expect_eq(a, b);
 }
 
-should (compare_unsigned_long_long) {
+should ("compare unsigned long long") {
     unsigned long long a = 9000000000ULL;
     unsigned long long b = 9000000000ULL;
 
     expect_eq(a, b);
 }
 
-should (compare_short) {
+should ("compare short") {
     short a = 10;
     short b = 10;
 
     expect_eq(a, b);
 }
 
-should (compare_unsigned_short) {
+should ("compare unsigned short") {
     unsigned short a = 10;
     unsigned short b = 10;
 
     expect_eq(a, b);
 }
 
-should (compare_char) {
+should ("compare char") {
     char a = 'A';
     char b = 'A';
 
     expect_eq(a, b);
 }
 
-should (compare_unsigned_char) {
+should ("compare unsigned char") {
     unsigned char a = 255;
     unsigned char b = 255;
 
     expect_eq(a, b);
 }
 
-should (compare_float) {
+should ("compare float") {
     float a = 3.14f;
     float b = 3.14f;
 
     expect_eq(a, b);
 }
 
-should (compare_double) {
+should ("compare double") {
     double a = 3.14159265358979;
     double b = 3.14159265358979;
 
     expect_eq(a, b);
 }
 
-should (compare_bool) {
+should ("compare bool") {
     bool a = true;
     bool b = true;
 
     expect_eq(a, b);
 }
 
-should (compare_char_ptr) {
+should ("compare char ptr") {
     char *a = "hello";
     char *b = "hello";
 
     expect_eq(a, b);
 }
 
-should (compare_const_char_ptr) {
+should ("compare const char ptr") {
     const char *a = "world";
     const char *b = "world";
 
@@ -136,105 +136,105 @@ should (compare_const_char_ptr) {
 
 describe("expect_not_eq")
 
-should (not_eq_int) {
+should ("not eq int") {
     int a = 1;
     int b = 2;
 
     expect_not_eq(a, b);
 }
 
-should (not_eq_unsigned_int) {
+should ("not eq unsigned int") {
     unsigned int a = 1u;
     unsigned int b = 2u;
 
     expect_not_eq(a, b);
 }
 
-should (not_eq_long) {
+should ("not eq long") {
     long a = 100L;
     long b = 200L;
 
     expect_not_eq(a, b);
 }
 
-should (not_eq_unsigned_long) {
+should ("not eq unsigned long") {
     unsigned long a = 100UL;
     unsigned long b = 200UL;
 
     expect_not_eq(a, b);
 }
 
-should (not_eq_long_long) {
+should ("not eq long long") {
     long long a = 9000000000LL;
     long long b = 9000000001LL;
 
     expect_not_eq(a, b);
 }
 
-should (not_eq_unsigned_long_long) {
+should ("not eq unsigned long long") {
     unsigned long long a = 9000000000ULL;
     unsigned long long b = 9000000001ULL;
 
     expect_not_eq(a, b);
 }
 
-should (not_eq_short) {
+should ("not eq short") {
     short a = 10;
     short b = 20;
 
     expect_not_eq(a, b);
 }
 
-should (not_eq_unsigned_short) {
+should ("not eq unsigned short") {
     unsigned short a = 10;
     unsigned short b = 20;
 
     expect_not_eq(a, b);
 }
 
-should (not_eq_char) {
+should ("not eq char") {
     char a = 'A';
     char b = 'B';
 
     expect_not_eq(a, b);
 }
 
-should (not_eq_unsigned_char) {
+should ("not eq unsigned char") {
     unsigned char a = 100;
     unsigned char b = 200;
 
     expect_not_eq(a, b);
 }
 
-should (not_eq_float) {
+should ("not eq float") {
     float a = 1.0f;
     float b = 2.0f;
 
     expect_not_eq(a, b);
 }
 
-should (not_eq_double) {
+should ("not eq double") {
     double a = 1.0;
     double b = 2.0;
 
     expect_not_eq(a, b);
 }
 
-should (not_eq_bool) {
+should ("not eq bool") {
     bool a = true;
     bool b = false;
 
     expect_not_eq(a, b);
 }
 
-should (not_eq_char_ptr) {
+should ("not eq char ptr") {
     char *a = "hello";
     char *b = "world";
 
     expect_not_eq(a, b);
 }
 
-should (not_eq_const_char_ptr) {
+should ("not eq const char ptr") {
     const char *a = "foo";
     const char *b = "bar";
 
@@ -244,37 +244,37 @@ should (not_eq_const_char_ptr) {
 
 describe("null string safety")
 
-should (both_null_char_ptr) {
+should ("both null char ptr") {
     char *a = NULL;
     char *b = NULL;
     expect_eq(a, b);
 }
 
-should (left_null_char_ptr) {
+should ("left null char ptr") {
     char *a = NULL;
     char *b = "hello";
     expect_not_eq(a, b);
 }
 
-should (right_null_char_ptr) {
+should ("right null char ptr") {
     char *a = "hello";
     char *b = NULL;
     expect_not_eq(a, b);
 }
 
-should (both_null_const_char_ptr) {
+should ("both null const char ptr") {
     const char *a = NULL;
     const char *b = NULL;
     expect_eq(a, b);
 }
 
-should (left_null_const_char_ptr) {
+should ("left null const char ptr") {
     const char *a = NULL;
     const char *b = "hello";
     expect_not_eq(a, b);
 }
 
-should (right_null_const_char_ptr) {
+should ("right null const char ptr") {
     const char *a = "hello";
     const char *b = NULL;
     expect_not_eq(a, b);

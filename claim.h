@@ -157,42 +157,27 @@ static struct {
     return; \
 } while (0)
 
-#define should(name) \
-    void name(void); \
-    __attribute__((constructor)) void register_##name(void) { \
+#define _CLAIM_REGISTER(name, id, is_only) \
+    void _CONCAT(claim_test_, id)(void); \
+    __attribute__((constructor)) void _CONCAT(claim_register_, id)(void) { \
         if (runner.registry_count >= MAX_TESTS) { \
             fprintf(stderr, BOLD_RED "error" RESET ": MAX_TESTS (%d) exceeded\n", MAX_TESTS); \
             exit(1); \
         } \
-        runner.registry[runner.registry_count].test_name = #name; \
+        runner.registry[runner.registry_count].test_name = name; \
         runner.registry[runner.registry_count].group = registered_group; \
-        runner.registry[runner.registry_count].fn = name; \
+        runner.registry[runner.registry_count].fn = _CONCAT(claim_test_, id); \
         runner.registry[runner.registry_count].setup = registered_setup; \
         runner.registry[runner.registry_count].teardown = registered_teardown; \
-        runner.registry[runner.registry_count].only = false; \
+        runner.registry[runner.registry_count].only = is_only; \
+        if (is_only) { runner.has_only = true; } \
         runner.registry_count += 1; \
     } \
-    void name(void)
+    void _CONCAT(claim_test_, id)(void)
 
-#define it should
-
-#define only(name) \
-    void name(void); \
-    __attribute__((constructor)) void register_##name(void) { \
-        if (runner.registry_count >= MAX_TESTS) { \
-            fprintf(stderr, BOLD_RED "error" RESET ": MAX_TESTS (%d) exceeded\n", MAX_TESTS); \
-            exit(1); \
-        } \
-        runner.registry[runner.registry_count].test_name = #name; \
-        runner.registry[runner.registry_count].group = registered_group; \
-        runner.registry[runner.registry_count].fn = name; \
-        runner.registry[runner.registry_count].setup = registered_setup; \
-        runner.registry[runner.registry_count].teardown = registered_teardown; \
-        runner.registry[runner.registry_count].only = true; \
-        runner.registry_count += 1; \
-        runner.has_only = true; \
-    } \
-    void name(void)
+#define should(name) _CLAIM_REGISTER(name, __COUNTER__, false)
+#define it(name) _CLAIM_REGISTER(name, __COUNTER__, false)
+#define only(name) _CLAIM_REGISTER(name, __COUNTER__, true)
 
 #define describe(name) \
     __attribute__((constructor)) void _UNIQUE(_set_group_)(void) { \

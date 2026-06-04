@@ -2,15 +2,15 @@
 
 describe("skipped and pending tests")
 
-should (skip_this) {
+should ("skip this") {
     skip("this test will be skipped");
 }
 
-should (finish_this_later) {
+should ("finish this later") {
     pending();
 }
 
-should (also_finish_this_later) {
+should ("also finish this later") {
     pending();
 }
 
