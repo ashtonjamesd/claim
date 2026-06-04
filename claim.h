@@ -237,7 +237,7 @@ static void run_all_tests() {
     current_describe = NULL;
 }
 
-int test_results() {
+static int test_results() {
     run_all_tests();
 
     size_t tests_passed = runner.tests_ran - runner.tests_failed - runner.tests_pending - runner.tests_skipped;

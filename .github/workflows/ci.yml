@@ -1,0 +1,25 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build
+        run: |
+          mkdir -p build
+          gcc claim.c -o build/claim
+
+      - name: Test
+        run: |
+          mkdir -p build
+          gcc test/test.c -o build/test
+          ./build/test
