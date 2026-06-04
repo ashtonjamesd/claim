@@ -10,6 +10,13 @@ Single-header unit testing for c
 - crash recovery, segfaults and aborts don't kill the runner
 - tracks time taken to complete run tests
 - no dependencies, just copy the header file
+- simple and intuitive user api
+
+## Why?
+
+A lot of C testing frameworks feel like C, perhaps verbose, boilerplate-heavy, or too low-level.
+
+`claim` is inspired by Ruby's RSpec and Minitest, bringing constructs like `describe`, `should`, `before`, and `after` to C. The goal is a testing framework that reads like English while also providing a useful collection of tools.
 
 ## Usage
 
