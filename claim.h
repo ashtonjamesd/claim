@@ -118,6 +118,8 @@ typedef struct {
     TestFunc fn;
     TestFunc setup;
     TestFunc teardown;
+
+    bool only;
 } registered_test;
 
 #define _CONCAT2(a, b) a##b
@@ -140,6 +142,8 @@ static struct {
 
     registered_test registry[MAX_TESTS];
     size_t registry_count;
+
+    bool has_only;
 } runner;
 
 #define pending() do { \
@@ -165,7 +169,26 @@ static struct {
         runner.registry[runner.registry_count].fn = name; \
         runner.registry[runner.registry_count].setup = registered_setup; \
         runner.registry[runner.registry_count].teardown = registered_teardown; \
-        runner.registry_count++; \
+        runner.registry[runner.registry_count].only = false; \
+        runner.registry_count += 1; \
+    } \
+    void name(void)
+
+#define only(name) \
+    void name(void); \
+    __attribute__((constructor)) void register_##name(void) { \
+        if (runner.registry_count >= MAX_TESTS) { \
+            fprintf(stderr, BOLD_RED "error" RESET ": MAX_TESTS (%d) exceeded\n", MAX_TESTS); \
+            exit(1); \
+        } \
+        runner.registry[runner.registry_count].test_name = #name; \
+        runner.registry[runner.registry_count].group = registered_group; \
+        runner.registry[runner.registry_count].fn = name; \
+        runner.registry[runner.registry_count].setup = registered_setup; \
+        runner.registry[runner.registry_count].teardown = registered_teardown; \
+        runner.registry[runner.registry_count].only = true; \
+        runner.registry_count += 1; \
+        runner.has_only = true; \
     } \
     void name(void)
 
@@ -244,6 +267,12 @@ static void run_all_tests() {
     clock_gettime(CLOCK_MONOTONIC, &suite_start);
 
     for (size_t i = 0; i < runner.registry_count; i++) {
+        if (runner.has_only && !runner.registry[i].only) {
+            runner.tests_ran += 1;
+            runner.tests_skipped += 1;
+            continue;
+        }
+
         current_describe = runner.registry[i].group;
         runner.tests_ran += 1;
 

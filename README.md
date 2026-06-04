@@ -6,7 +6,7 @@ Single-header unit testing for c
 - type-generic assertions with expected/actual values printed on failure
 - test grouping with `describe` and `should`
 - setup and teardown hooks with `before` and `after`
-- `skip` and `pending` for incomplete or blocked tests
+- `skip`, `pending`, and `only` for test control flow
 - crash recovery, segfaults and aborts don't kill the runner
 - tracks time taken to complete run tests
 - no dependencies, just copy the header file
@@ -92,6 +92,30 @@ should(read_from_cache) {
     'blocked by ticket #12 — cache returns stale entries'
 
 3 tests, 2 passed, 0 failed (0 pending, 1 skipped)
+```
+
+## Only
+
+Focus on specific tests with `only`. All other tests are skipped.
+
+```c
+should(not_this) {
+    expect(true);
+}
+
+only(just_this) {
+    expect_eq(1 + 1, 2);
+}
+
+should(not_this_either) {
+    expect(true);
+}
+```
+
+You can have multiple tests declared with `only`.
+
+```bash
+1 test, 1 passed, 0 failed (0 pending, 2 skipped) in 0.5ms
 ```
 
 ## Grouping
