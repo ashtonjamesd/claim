@@ -50,6 +50,8 @@ outputs:
   math
     ~ add (0.3ms)
     ~ subtract (0.3ms)
+
+2 tests, 2 passed, 0 failed (0 pending, 0 skipped) in 0.7ms
 ```
 
 Tests register themselves. Just write them and they run.
