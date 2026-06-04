@@ -238,6 +238,45 @@ should(not_eq_const_char_ptr) {
     expect_not_eq(a, b);
 }
 
+
+describe("null string safety")
+
+should(both_null_char_ptr) {
+    char *a = NULL;
+    char *b = NULL;
+    expect_eq(a, b);
+}
+
+should(left_null_char_ptr) {
+    char *a = NULL;
+    char *b = "hello";
+    expect_not_eq(a, b);
+}
+
+should(right_null_char_ptr) {
+    char *a = "hello";
+    char *b = NULL;
+    expect_not_eq(a, b);
+}
+
+should(both_null_const_char_ptr) {
+    const char *a = NULL;
+    const char *b = NULL;
+    expect_eq(a, b);
+}
+
+should(left_null_const_char_ptr) {
+    const char *a = NULL;
+    const char *b = "hello";
+    expect_not_eq(a, b);
+}
+
+should(right_null_const_char_ptr) {
+    const char *a = "hello";
+    const char *b = NULL;
+    expect_not_eq(a, b);
+}
+
 int main() {
     return test_results();
 }

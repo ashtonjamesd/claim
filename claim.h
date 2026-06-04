@@ -2,6 +2,7 @@
 #define claim_h
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
 
@@ -24,8 +25,20 @@ static bool claim_eq_unsigned_char(unsigned char a, unsigned char b) { return a 
 static bool claim_eq_float(float a, float b) { return a == b; }
 static bool claim_eq_double(double a, double b) { return a == b; }
 static bool claim_eq_bool(bool a, bool b) { return a == b; }
-static bool claim_eq_str(char *a, char *b) { return strcmp(a, b) == 0; }
-static bool claim_eq_const_str(const char *a, const char *b) { return strcmp(a, b) == 0; }
+
+static bool claim_eq_str(char *a, char *b) { 
+    if (!a && !b) return true;
+    if (!a || !b) return false;
+
+    return strcmp(a, b) == 0;
+ }
+
+static bool claim_eq_const_str(const char *a, const char *b) { 
+    if (!a && !b) return true;
+    if (!a || !b) return false;
+
+    return strcmp(a, b) == 0;
+ }
 
 #define FORMAT_TEST_VALUE(x) _Generic((x), \
     int: "%d", \
@@ -136,6 +149,10 @@ static struct {
 #define should(name) \
     void name(void); \
     __attribute__((constructor)) void register_##name(void) { \
+        if (runner.registry_count >= MAX_TESTS) { \
+            fprintf(stderr, BOLD_RED "error" RESET ": MAX_TESTS (%d) exceeded\n", MAX_TESTS); \
+            exit(1); \
+        } \
         runner.registry[runner.registry_count].test_name = #name; \
         runner.registry[runner.registry_count].group = registered_group; \
         runner.registry[runner.registry_count].fn = name; \
