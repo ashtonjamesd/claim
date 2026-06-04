@@ -2,6 +2,14 @@
 
 Single-header unit testing for c
 
+- `expect` and `refute` for boolean assertions
+- type-generic assertions with expected/actual values printed on failure
+- test grouping with `describe` and `should`
+- setup and teardown hooks with `before` and `after`
+- `skip` and `pending` for incomplete or blocked tests
+- crash recovery, segfaults and aborts don't kill the runner
+- no dependencies, just copy the header file
+
 ## Usage
 
 Copy `claim.h` into your project and include it.
