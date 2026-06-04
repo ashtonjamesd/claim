@@ -174,6 +174,8 @@ static struct {
     } \
     void name(void)
 
+#define it should
+
 #define only(name) \
     void name(void); \
     __attribute__((constructor)) void register_##name(void) { \

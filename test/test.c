@@ -2,19 +2,19 @@
 
 describe("expect and refute")
 
-should(should_expect_and_refute_correctly) {
+it(should_expect_and_refute_correctly) {
     expect(true);
     refute(false);
 }
 
-should(should_handle_negation) {
+it(should_handle_negation) {
     expect(!(1 == 2));
 }
 
 
 describe("null")
 
-should(should_detect_null) {
+should(detect_null) {
     char *p = NULL;
     expect_null(p);
 

@@ -37,13 +37,17 @@ int main() {
 
 Tests register themselves. Just write them and they run.
 
-## Should
+## Declaring Tests
 
-All test functions are declared with `should`.
+All test functions are declared with `should` or `it`. They're interchangeable so use whichever you prefer.
 
 ```c
-should(test_the_truth) {
-    expect(true);
+should(add_two_numbers) {
+    expect_eq(1 + 1, 2);
+}
+
+it(subtracts_two_numbers) {
+    expect_eq(5 - 3, 2);
 }
 ```
 
