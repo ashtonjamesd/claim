@@ -8,6 +8,7 @@ Single-header unit testing for c
 - setup and teardown hooks with `before` and `after`
 - `skip` and `pending` for incomplete or blocked tests
 - crash recovery, segfaults and aborts don't kill the runner
+- tracks time taken to complete run tests
 - no dependencies, just copy the header file
 
 ## Usage
@@ -159,16 +160,16 @@ In this case, each test gets a new allocation. `before` and `after` callbacks  a
 all passing:
 
 ```bash
-2 tests, 2 passed, 0 failed (0 pending, 0 skipped)
+2 tests, 2 passed, 0 failed (0 pending, 0 skipped) in 1.2ms
 ```
 
 with failures:
 
 ```bash
     assertion failed (test.c:12): expected 'a' to equal 'b' (got 3, expected 5)
-  test failed 'math' > 'add'
+  test failed 'math' > 'add' (0.4ms)
 
-3 tests, 2 passed, 1 failed (0 pending, 0 skipped)
+3 tests, 2 passed, 1 failed (0 pending, 0 skipped) in 2.1ms
 ```
 
 `test_results` returns `1` on failure and `0` on success.
@@ -179,9 +180,9 @@ Each test runs in a forked process. If a test segfaults, aborts, or crashes, the
 
 ```bash
     crashed (SIGSEGV (segmentation fault))
-  test crashed 'parser' > 'parse_null'
+  test crashed 'parser' > 'parse_null' (0.3ms)
 
-3 tests, 2 passed, 1 failed (0 pending, 0 skipped)
+3 tests, 2 passed, 1 failed (0 pending, 0 skipped) in 1.8ms
 ```
 
 Handles `SIGSEGV`, `SIGABRT`, `SIGFPE`, and `SIGBUS`.

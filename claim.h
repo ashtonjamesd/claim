@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include <string.h>
 
+#include <time.h>
 #include <sys/wait.h>
 #include <unistd.h>
 #include <signal.h>
@@ -135,6 +136,8 @@ static struct {
     size_t tests_pending;
     size_t tests_skipped;
 
+    double suite_ms;
+
     registered_test registry[MAX_TESTS];
     size_t registry_count;
 } runner;
@@ -223,20 +226,31 @@ static struct {
     } \
 } while (0)
 
-static void claim_print_result(const char *label, const char *group, const char *name, const char *color) {
+static void claim_print_result(const char *label, const char *group, const char *name, const char *color, double ms) {
     if (group) {
-        printf("%s  %s " RESET "'%s'%s > " RESET "'%s'\n\n", color, label, group, color, name);
+        printf("%s  %s " RESET "'%s'%s > " RESET "'%s' (%.1fms)\n\n", color, label, group, color, name, ms);
     } else {
-        printf("%s  %s " RESET "'%s'\n\n", color, label, name);
+        printf("%s  %s " RESET "'%s' (%.1fms)\n\n", color, label, name, ms);
     }
 }
 
+static double claim_elapsed_ms(struct timespec start, struct timespec end) {
+    return (end.tv_sec - start.tv_sec) * 1000.0
+         + (end.tv_nsec - start.tv_nsec) / 1000000.0;
+}
+
 static void run_all_tests() {
+    struct timespec suite_start, suite_end;
+    clock_gettime(CLOCK_MONOTONIC, &suite_start);
+
     for (size_t i = 0; i < runner.registry_count; i++) {
         current_describe = runner.registry[i].group;
         runner.tests_ran += 1;
-        
+
         fflush(stdout);
+
+        struct timespec test_start, test_end;
+        clock_gettime(CLOCK_MONOTONIC, &test_start);
         pid_t pid = fork();
 
         if (pid == 0) {
@@ -253,6 +267,8 @@ static void run_all_tests() {
         
         int status;
         waitpid(pid, &status, 0);
+        clock_gettime(CLOCK_MONOTONIC, &test_end);
+        double test_ms = claim_elapsed_ms(test_start, test_end);
 
         const char *group = current_describe;
         const char *name = runner.registry[i].test_name;
@@ -272,23 +288,26 @@ static void run_all_tests() {
 
             runner.tests_failed += 1;
             printf("    " BOLD_RED "crashed" RESET " (%s)\n", sig_name);
-            claim_print_result("test crashed", group, name, BOLD_RED);
+            claim_print_result("test crashed", group, name, BOLD_RED, test_ms);
         } else if (WIFEXITED(status)) {
             int code = WEXITSTATUS(status);
 
             if (code == 1) {
                 runner.tests_failed += 1;
-                claim_print_result("test failed", group, name, RED);
+                claim_print_result("test failed", group, name, RED, test_ms);
             } else if (code == 2) {
                 runner.tests_pending += 1;
-                claim_print_result("test pending", group, name, YELLOW);
+                claim_print_result("test pending", group, name, YELLOW, test_ms);
             } else if (code == 3) {
                 runner.tests_skipped += 1;
-                claim_print_result("test skipped", group, name, YELLOW);
+                claim_print_result("test skipped", group, name, YELLOW, test_ms);
             }
         }
     }
     current_describe = NULL;
+
+    clock_gettime(CLOCK_MONOTONIC, &suite_end);
+    runner.suite_ms = claim_elapsed_ms(suite_start, suite_end);
 }
 
 static int test_results() {
@@ -300,8 +319,8 @@ static int test_results() {
     const char *color = (runner.tests_failed > 0) ? RED : GREEN;
 
     printf(
-        "\n%s%zu tests, %zu passed, %zu failed (%zu pending, %zu skipped)" RESET "\n",
-        color, tests_ran, tests_passed, runner.tests_failed, runner.tests_pending, runner.tests_skipped
+        "\n%s%zu tests, %zu passed, %zu failed (%zu pending, %zu skipped) in %.1fms" RESET "\n",
+        color, tests_ran, tests_passed, runner.tests_failed, runner.tests_pending, runner.tests_skipped, runner.suite_ms
     );
 
     return (runner.tests_failed > 0)? 1 : 0;
