@@ -56,7 +56,7 @@ it(subtracts_two_numbers) {
 
 ```c
 expect(x == 1)               // asserts any expression
-refute(x == 0)               // fails if expression is true
+refute(x == 0)               // fails if expression is true (alias: expect_not)
 expect_eq(a, b)              // type-generic equality (int, float, char *, etc.)
 expect_not_eq(a, b)          // type-generic inequality
 expect_null(ptr)             // ptr == NULL

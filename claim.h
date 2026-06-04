@@ -225,6 +225,8 @@ static struct {
     } \
 } while (0)
 
+#define expect_not refute
+
 #define expect(expr) do { \
     runner.assertions += 1; \
     if (!(expr)) { \

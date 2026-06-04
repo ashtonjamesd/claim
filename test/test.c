@@ -5,6 +5,9 @@ describe("expect and refute")
 it(should_expect_and_refute_correctly) {
     expect(true);
     refute(false);
+
+    expect(true);
+    expect_not(false);
 }
 
 it(should_handle_negation) {
