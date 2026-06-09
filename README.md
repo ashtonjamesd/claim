@@ -20,6 +20,12 @@ A lot of C testing frameworks feel like C, perhaps verbose, boilerplate-heavy, o
 
 `claim` is inspired by Ruby's RSpec and Minitest, bringing constructs like `describe`, `should`, `before`, and `after` to C. The goal is a testing framework that reads like English while also providing a useful collection of tools.
 
+## Limitations
+
+This framework is designed around a single translation unit. If you would like to run tests from different files using this framework, then you will have to compile them separately and then run each of them individually.
+
+This is undesirable and part of future work is to rectify this.
+
 <br/>
 
 > **Notice:** claim is a new project and may contain bugs or stability issues. Use with caution.

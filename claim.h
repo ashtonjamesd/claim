@@ -280,17 +280,14 @@ static void run_all_tests() {
 
         fflush(stdout);
 
-        int outpipe[2];
-        pipe(outpipe);
-
         struct timespec test_start, test_end;
         clock_gettime(CLOCK_MONOTONIC, &test_start);
         pid_t pid = fork();
 
         if (pid == 0) {
-            close(outpipe[0]);
-            dup2(outpipe[1], STDOUT_FILENO);
-            close(outpipe[1]);
+            runner.tests_pending = 0;
+            runner.tests_skipped = 0;
+            runner.assertions_failed = 0;
 
             if (runner.registry[i].setup) runner.registry[i].setup();
             runner.registry[i].fn();
@@ -304,20 +301,6 @@ static void run_all_tests() {
 
             _exit(0);
         }
-
-        close(outpipe[1]);
-
-        char *captured = NULL;
-        size_t captured_len = 0;
-        char buf[4096];
-        ssize_t n;
-        while ((n = read(outpipe[0], buf, sizeof(buf))) > 0) {
-            captured = realloc(captured, captured_len + n + 1);
-            memcpy(captured + captured_len, buf, n);
-            captured_len += n;
-            captured[captured_len] = '\0';
-        }
-        close(outpipe[0]);
 
         int status;
         waitpid(pid, &status, 0);
@@ -369,15 +352,6 @@ static void run_all_tests() {
                 }
             }
         }
-
-        if (captured && runner.quiet < 2) {
-            for (char *line = captured, *nl; line && *line; line = nl) {
-                nl = strchr(line, '\n');
-                if (nl) *nl++ = '\0';
-                printf("        %s\n", line);
-            }
-        }
-        free(captured);
     }
     current_describe = NULL;
 

@@ -281,5 +281,5 @@ should ("right null const char ptr") {
 }
 
 int main() {
-    return test_results(CLAIM_VERBOSE);
+    return test_results(CLAIM_QUIET);
 }
