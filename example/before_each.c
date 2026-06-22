@@ -4,7 +4,7 @@ static int counter;
 
 describe("counter")
 
-before (reset_counter) {
+before ("reset_counter") {
     counter = 0;
 }
 
@@ -22,5 +22,5 @@ should ("still starts at zero") {
 }
 
 int main() {
-    return test_results(CLAIM_QUIET);
+    return test_results(CLAIM_VV);
 }

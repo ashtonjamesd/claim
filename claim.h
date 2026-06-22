@@ -5,15 +5,17 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include <stdint.h>
+#include <iso646.h>
 
 #include <time.h>
 #include <sys/wait.h>
 #include <unistd.h>
 #include <signal.h>
 
-#define CLAIM_VERBOSE 0
-#define CLAIM_QUIET 1
-#define CLAIM_SUMMARY 2
+#define CLAIM_VVV 0
+#define CLAIM_VV 1
+#define CLAIM_V 2
 #define CLAIM_SILENT 3
 
 #define RED "\033[0;31m"
@@ -37,15 +39,15 @@ static bool claim_eq_double(double a, double b) { return a == b; }
 static bool claim_eq_bool(bool a, bool b) { return a == b; }
 
 static bool claim_eq_str(char *a, char *b) {
-    if (!a && !b) return true;
-    if (!a || !b) return false;
+    if (!a and !b) return true;
+    if (!a or !b) return false;
 
     return strcmp(a, b) == 0;
 }
 
 static bool claim_eq_const_str(const char *a, const char *b) {
-    if (!a && !b) return true;
-    if (!a || !b) return false;
+    if (!a and !b) return true;
+    if (!a or !b) return false;
 
     return strcmp(a, b) == 0;
 }
@@ -193,19 +195,23 @@ static struct {
         registered_teardown = NULL; \
     }
 
-#define before(name) \
-    void name(); \
-    __attribute__((constructor)) void UNIQUE_(_setup)(void) { \
-        registered_setup = name; \
+#define _CLAIM_BEFORE(desc, id) \
+    void CONCAT_(claim_before_, id)(void); \
+    __attribute__((constructor)) void CONCAT_(claim_register_before_, id)(void) { \
+        registered_setup = CONCAT_(claim_before_, id); \
     } \
-    void name()
+    void CONCAT_(claim_before_, id)(void)
 
-#define after(name) \
-    void name(); \
-    __attribute__((constructor)) void UNIQUE_(_setup)(void) { \
-        registered_teardown = name; \
+#define before(desc) _CLAIM_BEFORE(desc, __COUNTER__)
+
+#define _CLAIM_AFTER(desc, id) \
+    void CONCAT_(claim_after_, id)(void); \
+    __attribute__((constructor)) void CONCAT_(claim_register_after_, id)(void) { \
+        registered_teardown = CONCAT_(claim_after_, id); \
     } \
-    void name()
+    void CONCAT_(claim_after_, id)(void)
+
+#define after(desc) _CLAIM_AFTER(desc, __COUNTER__)
 
 #define ASSERTION_FAILED BOLD_RED "assertion failed" RESET
 
@@ -248,7 +254,7 @@ static struct {
 static const char *claim_last_group = NULL;
 
 static void claim_print_group(const char *group) {
-    if (group && (claim_last_group == NULL || strcmp(claim_last_group, group) != 0)) {
+    if (group and (claim_last_group == NULL or strcmp(claim_last_group, group) != 0)) {
         printf("\n  %s\n", group);
         claim_last_group = group;
     }
@@ -269,7 +275,7 @@ static void run_all_tests() {
     clock_gettime(CLOCK_MONOTONIC, &suite_start);
 
     for (size_t i = 0; i < runner.registry_count; i++) {
-        if (runner.has_only && !runner.registry[i].only) {
+        if (runner.has_only and !runner.registry[i].only) {
             runner.tests_ran += 1;
             runner.tests_skipped += 1;
             continue;

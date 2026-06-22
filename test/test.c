@@ -1,6 +1,26 @@
 #include "../claim.h"
 
+describe("test runner")
+it ("should run tests and report results") {
+    printf("\nrunning claim test runner!");
+    expect(true);
+}
+
+
+/*  claim tests  */
+
 describe("expect and refute")
+
+static uint8_t test_byte = 0;
+
+after ("do something after all tests") {
+    expect_eq(test_byte, 1);
+    test_byte = 0;
+}
+
+before ("do something before all tests") {
+    test_byte = 1;
+}
 
 it ("should expect and refute correctly") {
     expect(true);
@@ -281,5 +301,5 @@ should ("right null const char ptr") {
 }
 
 int main() {
-    return test_results(CLAIM_QUIET);
+    return test_results(CLAIM_VV);
 }

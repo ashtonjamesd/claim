@@ -131,12 +131,12 @@ describe("setup and teardown")
     
 static int *counter;
 
-before (alloc_counter) {
+before ("alloc_counter") {
     counter = malloc(sizeof(int));
     *counter = 0;
 }
 
-after (free_counter) {
+after ("free_counter") {
     free(counter);
     counter = NULL;
 }
@@ -178,5 +178,5 @@ it ("works like should") {
 }
 
 int main() {
-    return test_results(CLAIM_QUIET);
+    return test_results(CLAIM_VV);
 }

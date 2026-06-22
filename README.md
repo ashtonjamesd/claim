@@ -217,6 +217,8 @@ should ("reset between tests") {
 
 In this case, each test gets a new allocation. `before` and `after` callbacks  are scoped to the current `describe`. Declaring a new `describe` clears them.
 
+`after` and `before` will only run when inside of a `describe`. They must also be positioned above all tests for them to work.
+
 
 ## Output
 
@@ -262,9 +264,9 @@ Handles `SIGSEGV`, `SIGABRT`, `SIGFPE`, and `SIGBUS`.
 Control how much output `test_results` produces by passing a verbosity level.
 
 ```c
-test_results(CLAIM_VERBOSE)  // full output (default)
-test_results(CLAIM_QUIET)    // failures and crashes only
-test_results(CLAIM_SUMMARY)  // summary line only
+test_results(CLAIM_VVV)  // full output
+test_results(CLAIM_VV)    // failures and crashes only
+test_results(CLAIM_V)  // summary line only
 test_results(CLAIM_SILENT)   // no output, just the exit code
 ```
 

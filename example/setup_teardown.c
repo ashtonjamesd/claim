@@ -12,14 +12,14 @@ static int_vec *vec;
 describe("int_vec")
 
 
-before (alloc_vec) {
+before ("alloc_vec") {
     vec = malloc(sizeof(int_vec));
     vec->items = malloc(sizeof(int) * 8);
     vec->len = 0;
     vec->cap = 8;
 }
 
-after (free_vec) {
+after ("free_vec") {
     free(vec->items);
     free(vec);
     vec = NULL;
@@ -44,5 +44,5 @@ should ("not leak between tests") {
 }
 
 int main() {
-    return test_results(CLAIM_QUIET);
+    return test_results(CLAIM_VV);
 }

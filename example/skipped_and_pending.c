@@ -15,5 +15,5 @@ should ("also finish this later") {
 }
 
 int main() {
-    return test_results(CLAIM_QUIET);
+    return test_results(CLAIM_VV);
 }
