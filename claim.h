@@ -18,7 +18,15 @@
 #define CLAIM_V 2       // summary line only
 #define CLAIM_SILENT 3  // no output, just the exit code
 
-#define CLAIM_EQ_DEF(name, T) static bool claim_eq_##name(T a, T b) { return a == b; }
+#define CLAIM_LIGHT_RED "\033[91m"
+#define CLAIM_DARK_RED "\033[31m"
+#define CLAIM_YELLOW "\033[33m"
+#define CLAIM_RESET "\033[0m"
+
+#define CLAIM_EQ_DEF(name, T) \
+    static bool claim_eq_##name(T a, T b) { \
+        return a == b; \
+    }
 
 CLAIM_EQ_DEF(int, int)
 CLAIM_EQ_DEF(uint, unsigned int)
@@ -121,8 +129,15 @@ static void claim_skip(const char *msg) {
     fprintf(runner.report, "  %s\n", msg);
 }
 
-#define pending() do { runner.pending = true; return; } while (0)
-#define skip(msg) do { claim_skip(msg); return; } while (0)
+#define pending() do { \
+    runner.pending = true; \
+    return; \
+} while (0)
+
+#define skip(msg) do { \
+    claim_skip(msg); \
+    return; \
+} while (0)
 
 #define expect(expr) do { \
     if (!(expr)) claim_fail(__FILE__, __LINE__, "expected '%s' to be true\n", #expr); \
@@ -248,15 +263,28 @@ static int test_results(int verbosity) {
         int code = WIFEXITED(status) ? WEXITSTATUS(status) : -1;
 
         const char *label = "FAIL";
-        if (code == 0) { passed += 1; continue; }
-        else if (code == 2) { label = "PENDING"; pending += 1; }
-        else if (code == 3) { label = "SKIP"; skipped += 1; }
-        else failed += 1;
+        const char *color = CLAIM_LIGHT_RED;
+        if (code == 0) {
+            passed += 1;
+            continue;
+        } else if (code == 2) {
+            label = "PENDING";
+            color = CLAIM_YELLOW;
+            pending += 1;
+        } else if (code == 3) {
+            label = "SKIP";
+            color = CLAIM_YELLOW;
+            skipped += 1;
+        } else {
+            failed += 1;
+        }
 
         bool is_failure = (code != 2 and code != 3);
         if (verbosity > CLAIM_VV or (verbosity == CLAIM_VV and !is_failure)) continue;
 
-        printf("\n%s ", label);
+        if (WIFSIGNALED(status)) color = CLAIM_DARK_RED;
+
+        printf("\n%s%s" CLAIM_RESET " ", color, label);
         if (test->group) printf("%s: ", test->group);
         printf("%s\n", test->name);
 
@@ -264,7 +292,7 @@ static int test_results(int verbosity) {
         for (int c; (c = fgetc(runner.report)) != EOF;) putchar(c);
 
         if (WIFSIGNALED(status)) {
-            printf("  crashed: %s\n", strsignal(WTERMSIG(status)));
+            printf("  " CLAIM_DARK_RED "crashed: %s" CLAIM_RESET "\n", strsignal(WTERMSIG(status)));
         } else if (is_failure and code != 1) {
             printf("  exited with code %d\n", code);
         }
