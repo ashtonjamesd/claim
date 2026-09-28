@@ -10,6 +10,7 @@ Single-header unit testing for c
 - `skip`, `pending`, and `only` for test control flow
 - crash recovery, segfaults and aborts don't kill the runner
 - configurable test output verbosity levels
+- tracks time taken to run tests
 - no dependencies, just copy the header file
 - simple and intuitive user api
 
@@ -57,7 +58,7 @@ int main() {
 outputs:
 
 ```bash
-2 tests, 2 passed, 0 failed, 0 pending, 0 skipped
+2 tests, 2 passed, 0 failed, 0 pending, 0 skipped in 1.2ms
 ```
 
 Tests register themselves. Just write them and they run.
@@ -109,7 +110,7 @@ should ("reject empty") {
 Failure output:
 
 ```bash
-FAIL parser: parse int
+FAIL parser: parse int (0.4ms)
   test.c:5: expected 'result' to equal '42' (got -1, expected 42)
 ```
 
@@ -125,9 +126,9 @@ should ("not ready yet") {
 ```
 
 ```bash
-PENDING pending tests: not ready yet
+PENDING pending tests: not ready yet (0.4ms)
 
-2 tests, 2 passed, 0 failed, 1 pending, 0 skipped
+2 tests, 2 passed, 0 failed, 1 pending, 0 skipped in 1.2ms
 ```
 
 ## Skip
@@ -144,10 +145,10 @@ should ("read from cache") {
 ```
 
 ```bash
-SKIP storage: read from cache
+SKIP storage: read from cache (0.4ms)
   currently blocked by ticket #12 — cache returns stale entries
 
-3 tests, 2 passed, 0 failed, 0 pending, 1 skipped
+3 tests, 2 passed, 0 failed, 0 pending, 1 skipped in 1.2ms
 ```
 
 ## Only
@@ -171,7 +172,7 @@ should ("not do this either") {
 You can have multiple tests declared with `only`.
 
 ```bash
-1 tests, 1 passed, 0 failed, 0 pending, 2 skipped
+1 tests, 1 passed, 0 failed, 0 pending, 2 skipped in 1.2ms
 ```
 
 ## Setup and Teardown
@@ -217,16 +218,16 @@ In this case, each test gets a new allocation. `before` and `after` callbacks  a
 all passing (`CLAIM_VV`):
 
 ```bash
-2 tests, 2 passed, 0 failed, 0 pending, 0 skipped
+2 tests, 2 passed, 0 failed, 0 pending, 0 skipped in 1.2ms
 ```
 
 with failures (`CLAIM_VV`):
 
 ```bash
-FAIL math: add
+FAIL math: add (0.4ms)
   test.c:6: expected 'a' to equal 'b' (got 3, expected 5)
 
-2 tests, 1 passed, 1 failed, 0 pending, 0 skipped
+2 tests, 1 passed, 1 failed, 0 pending, 0 skipped in 1.2ms
 ```
 
 `test_results` returns `1` on failure and `0` on success.
@@ -236,10 +237,10 @@ FAIL math: add
 Each test runs in a forked process. If a test segfaults, aborts, or crashes, the runner catches it and keeps going.
 
 ```bash
-FAIL parser: parse null
+FAIL parser: parse null (0.4ms)
   crashed: Segmentation fault: 11
 
-3 tests, 2 passed, 1 failed, 0 pending, 0 skipped
+3 tests, 2 passed, 1 failed, 0 pending, 0 skipped in 1.2ms
 ```
 
 Any signal is caught and reported by name. Tests that call `exit()` with a non-zero code are reported as failures too.

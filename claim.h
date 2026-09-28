@@ -9,6 +9,7 @@
 #include <string.h>
 #include <iso646.h>
 
+#include <time.h>
 #include <signal.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -215,6 +216,12 @@ static void claim_skip(const char *msg) {
 #define before(desc) _CLAIM_HOOK(setup, __COUNTER__)
 #define after(desc) _CLAIM_HOOK(teardown, __COUNTER__)
 
+static double claim_now_ms(void) {
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return ts.tv_sec * 1000.0 + ts.tv_nsec / 1000000.0;
+}
+
 // runs one test in a child process so crashes can't take down the runner
 static int claim_run(RegisteredTest *test) {
     ftruncate(fileno(runner.report), 0);
@@ -251,6 +258,8 @@ static int test_results(int verbosity) {
     }
     setvbuf(runner.report, NULL, _IONBF, 0);
 
+    double suite_start = claim_now_ms();
+
     for (size_t i = 0; i < runner.count; i++) {
         RegisteredTest *test = &runner.registry[i];
 
@@ -259,7 +268,9 @@ static int test_results(int verbosity) {
             continue;
         }
 
+        double test_start = claim_now_ms();
         int status = claim_run(test);
+        double test_ms = claim_now_ms() - test_start;
         int code = WIFEXITED(status) ? WEXITSTATUS(status) : -1;
 
         const char *label = "FAIL";
@@ -286,7 +297,7 @@ static int test_results(int verbosity) {
 
         printf("\n%s%s" CLAIM_RESET " ", color, label);
         if (test->group) printf("%s: ", test->group);
-        printf("%s\n", test->name);
+        printf("%s (%.1fms)\n", test->name, test_ms);
 
         rewind(runner.report);
         for (int c; (c = fgetc(runner.report)) != EOF;) putchar(c);
@@ -300,9 +311,11 @@ static int test_results(int verbosity) {
 
     fclose(runner.report);
 
+    double suite_ms = claim_now_ms() - suite_start;
+
     if (verbosity < CLAIM_SILENT) {
-        printf("\n%zu tests, %zu passed, %zu failed, %zu pending, %zu skipped\n",
-            passed + failed, passed, failed, pending, skipped);
+        printf("\n%zu tests, %zu passed, %zu failed, %zu pending, %zu skipped in %.1fms\n",
+            passed + failed, passed, failed, pending, skipped, suite_ms);
     }
 
     return failed > 0;
