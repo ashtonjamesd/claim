@@ -10,7 +10,6 @@ Single-header unit testing for c
 - `skip`, `pending`, and `only` for test control flow
 - crash recovery, segfaults and aborts don't kill the runner
 - configurable test output verbosity levels
-- tracks time taken to run tests
 - no dependencies, just copy the header file
 - simple and intuitive user api
 
@@ -51,18 +50,14 @@ should ("subtract") {
 }
 
 int main() {
-    return test_results(CLAIM_VERBOSE);
+    return test_results(CLAIM_VVV);
 }
 ```
 
 outputs:
 
 ```bash
-  math
-    ~ add (0.3ms)
-    ~ subtract (0.3ms)
-
-2 tests, 2 passed, 0 failed (0 pending, 0 skipped) in 0.7ms
+2 tests, 2 passed, 0 failed, 0 pending, 0 skipped
 ```
 
 Tests register themselves. Just write them and they run.
@@ -114,9 +109,8 @@ should ("reject empty") {
 Failure output:
 
 ```bash
-  parser
-    x parse int (0.4ms)
-        assertion failed (test.c:5): expected 'result' to equal '42' (got -1, expected 42)
+FAIL parser: parse int
+  test.c:5: expected 'result' to equal '42' (got -1, expected 42)
 ```
 
 ## Pending
@@ -131,10 +125,9 @@ should ("not ready yet") {
 ```
 
 ```bash
-  pending tests
-    - not ready yet (0.1ms)
+PENDING pending tests: not ready yet
 
-2 tests, 2 passed, 0 failed (1 pending, 0 skipped) in 0.8ms
+2 tests, 2 passed, 0 failed, 1 pending, 0 skipped
 ```
 
 ## Skip
@@ -151,11 +144,10 @@ should ("read from cache") {
 ```
 
 ```bash
-  storage
-    - read from cache (0.2ms)
-        'currently blocked by ticket #12 — cache returns stale entries'
+SKIP storage: read from cache
+  currently blocked by ticket #12 — cache returns stale entries
 
-3 tests, 2 passed, 0 failed (0 pending, 1 skipped) in 1.2ms
+3 tests, 2 passed, 0 failed, 0 pending, 1 skipped
 ```
 
 ## Only
@@ -179,7 +171,7 @@ should ("not do this either") {
 You can have multiple tests declared with `only`.
 
 ```bash
-1 tests, 1 passed, 0 failed (0 pending, 2 skipped) in 0.5ms
+1 tests, 1 passed, 0 failed, 0 pending, 2 skipped
 ```
 
 ## Setup and Teardown
@@ -222,25 +214,19 @@ In this case, each test gets a new allocation. `before` and `after` callbacks  a
 
 ## Output
 
-all passing:
+all passing (`CLAIM_VV`):
 
 ```bash
-  math
-    ~ add (0.3ms)
-    ~ subtract (0.2ms)
-
-2 tests, 2 passed, 0 failed (0 pending, 0 skipped) in 0.8ms
+2 tests, 2 passed, 0 failed, 0 pending, 0 skipped
 ```
 
-with failures:
+with failures (`CLAIM_VV`):
 
 ```bash
-  math
-    ~ subtract (0.2ms)
-    x add (0.4ms)
-        assertion failed (test.c:6): expected 'a' to equal 'b' (got 3, expected 5)
+FAIL math: add
+  test.c:6: expected 'a' to equal 'b' (got 3, expected 5)
 
-2 tests, 1 passed, 1 failed (0 pending, 0 skipped) in 1.0ms
+2 tests, 1 passed, 1 failed, 0 pending, 0 skipped
 ```
 
 `test_results` returns `1` on failure and `0` on success.
@@ -250,24 +236,23 @@ with failures:
 Each test runs in a forked process. If a test segfaults, aborts, or crashes, the runner catches it and keeps going.
 
 ```bash
-  parser
-    x parse null (0.3ms)
-        crashed (SIGSEGV (segmentation fault))
+FAIL parser: parse null
+  crashed: Segmentation fault: 11
 
-3 tests, 2 passed, 1 failed (0 pending, 0 skipped) in 1.8ms
+3 tests, 2 passed, 1 failed, 0 pending, 0 skipped
 ```
 
-Handles `SIGSEGV`, `SIGABRT`, `SIGFPE`, and `SIGBUS`.
+Any signal is caught and reported by name. Tests that call `exit()` with a non-zero code are reported as failures too.
 
 ## Verbosity
 
 Control how much output `test_results` produces by passing a verbosity level.
 
 ```c
-test_results(CLAIM_VVV)  // full output
-test_results(CLAIM_VV)    // failures and crashes only
-test_results(CLAIM_V)  // summary line only
-test_results(CLAIM_SILENT)   // no output, just the exit code
+test_results(CLAIM_VVV)     // failure details, plus pending and skipped tests
+test_results(CLAIM_VV)      // failure details only
+test_results(CLAIM_V)       // summary line only
+test_results(CLAIM_SILENT)  // no output, just the exit code
 ```
 
 ## Building

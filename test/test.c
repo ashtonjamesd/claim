@@ -1,7 +1,7 @@
 #include "../claim.h"
 
 describe("test runner")
-it ("should run tests and report results") {
+it ("should run tests and report results\n") {
     printf("\nrunning claim test runner!");
     expect(true);
 }
